@@ -1,13 +1,9 @@
 #!/bin/bash
 #
-# sample script to start or stop a VDB.
+# sample script to  ...........
 #
-# set this to the FQDN or IP address of the Delphix Engine
-DE="172.16.31.131"
-# set this to the Delphix admin user name
-DELPHIX_ADMIN="delphix_admin"
-# set this to the password for the Delphix admin user
-DELPHIX_PASS="landshark"
+. loginCredentials
+
 
 rm cookies.txt
 
@@ -16,6 +12,16 @@ echo "create | delete | share | unshare"
 echo "Type your choice  from above:"
 read choice
 
+# Create Our Session, including establishing the API version.
+        # Pulling the version into parts. The {} are necessary for string manipulation.
+        # Strip out longest match following "."  This leaves only the major version.
+        major=${VERSION%%.*}
+        # Strip out the shortest match preceding "." This leaves minor.micro.
+        minorMicro=${VERSION#*.}
+        # Strip out the shortest match followint "." This leaves the minor version.
+        minor=${minorMicro%.*}
+        # Strip out the longest match preceding "." This leaves the micro version.
+        micro=${VERSION##*.}
 #
 # create our session
 curl -s -X POST -k --data @- http://${DE}/resources/json/delphix/session -c ~/cookies.txt -H "Content-Type: application/json" <<EOF
@@ -23,9 +29,9 @@ curl -s -X POST -k --data @- http://${DE}/resources/json/delphix/session -c ~/co
     "type": "APISession",
     "version": {
         "type": "APIVersion",
-        "major": 1,
-        "minor": 9,
-        "micro": 3
+        "major": $major,
+        "minor": $minor,
+        "micro": $micro
     }
 }
 EOF

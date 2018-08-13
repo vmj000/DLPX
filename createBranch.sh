@@ -2,16 +2,7 @@
 
 # A sample script for calls to the API. This one creates a Jet Stream branch.
 
-##### Constants
-
-# Describes a Delphix software revision.
-# Please change version are per your Delphix Engine CLI, if different
-VERSION="1.9.3"
-
-##### Default Values. These can be overwriten with optional arguments.
-engine="172.16.31.131"
-username="dev"
-password="delphix"
+. loginCredentials
 
 rm ./cookies.txt
 
@@ -60,7 +51,7 @@ function create_session
 	# no parens, no tabs or anything.
 
 	echo "creating session..."
-	result=$(curl -s -S -X POST -k --data @- http://${engine}/resources/json/delphix/session \
+	result=$(curl -s -S -X POST -k --data @- http://${DE}/resources/json/delphix/session \
 		-c ~/cookies.txt -H "Content-Type: application/json" <<-EOF
 	{
 		"type": "APISession",
@@ -80,12 +71,12 @@ function create_session
 function authenticate_de
 {
 	echo "authenticating delphix engine..."
-	result=$(curl -s -S -X POST -k --data @- http://${engine}/resources/json/delphix/login \
+	result=$(curl -s -S -X POST -k --data @- http://${DE}/resources/json/delphix/login \
 		-b ~/cookies.txt -H "Content-Type: application/json" <<-EOF
 	{
 		"type": "LoginRequest",
-		"username": "${username}",
-		"password": "${password}"
+		"username": "${DELPHIX_ADMIN}",
+		"password": "${DELPHIX_PASS}"
 	}
 	EOF)	
 
@@ -129,7 +120,7 @@ function create_branch
 	    \"type\": \"JSBranchCreateParameters\""
 	    
 
-	result=$(curl -s -X POST -k --data @- http://${engine}/resources/json/delphix/jetstream/branch \
+	result=$(curl -s -X POST -k --data @- http://${DE}/resources/json/delphix/jetstream/branch \
 	    -b ~/cookies.txt -H "Content-Type: application/json" <<-EOF
 	{
 	    $paramString
@@ -144,7 +135,7 @@ function create_branch
     # Get rid of everything after
     jobRef=${temp%%\"*}
 
-    result=$(curl -s -X GET -k http://${engine}/resources/json/delphix/job/${jobRef} \
+    result=$(curl -s -X GET -k http://${DE}/resources/json/delphix/job/${jobRef} \
     -b ~/cookies.txt -H "Content-Type: application/json")
 
     # Get everything in the result that comes after job.
@@ -157,7 +148,7 @@ function create_branch
     while [ $jobState = "RUNNING" ]
     do
     	sleep 1
-    	result=$(curl -s -X GET -k http://${engine}/resources/json/delphix/job/${jobRef} \
+    	result=$(curl -s -X GET -k http://${DE}/resources/json/delphix/job/${jobRef} \
 	    -b ~/cookies.txt -H "Content-Type: application/json")
 
 	    # Get everything in the result that comes after job.

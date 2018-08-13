@@ -2,12 +2,8 @@
 #
 # Script to perform brach level operations in a Jetstream Container.
 #
-# set this to the FQDN or IP address of the Delphix Engine
-DE="172.16.31.131"
-# set this to the Delphix admin user name
-DELPHIX_ADMIN="delphix_admin"
-# set this to the password for the Delphix admin user
-DELPHIX_PASS="landshark"
+
+. loginCredentials
 
 rm cookies.txt
 
@@ -16,6 +12,17 @@ echo "create | delete | activate"
 echo "Type your choice  from above:"
 read choice
 
+# Create Our Session, including establishing the API version.
+        # Pulling the version into parts. The {} are necessary for string manipulation.
+        # Strip out longest match following "."  This leaves only the major version.
+        major=${VERSION%%.*}
+        # Strip out the shortest match preceding "." This leaves minor.micro.
+        minorMicro=${VERSION#*.}
+        # Strip out the shortest match followint "." This leaves the minor version.
+        minor=${minorMicro%.*}
+        # Strip out the longest match preceding "." This leaves the micro version.
+        micro=${VERSION##*.}
+
 #
 # create our session
 curl -s -X POST -k --data @- http://${DE}/resources/json/delphix/session -c ~/cookies.txt -H "Content-Type: application/json" <<EOF
@@ -23,9 +30,9 @@ curl -s -X POST -k --data @- http://${DE}/resources/json/delphix/session -c ~/co
     "type": "APISession",
     "version": {
         "type": "APIVersion",
-        "major": 1,
-        "minor": 9,
-        "micro": 3
+        "major": $major,
+        "minor": $minor,
+        "micro": $micro
     }
 }
 EOF
@@ -55,6 +62,8 @@ create)
   echo "New Branch  Name:"
   read brch
   sh createBranch.sh ${brch}  JS_DATA_CONTAINER-${cntnr}
+ 
+ sleep 180
 ;;
 activate)
  curl -X GET -k http://${DE}/resources/json/delphix/jetstream/container -b ~/cookies.txt -H "Content-Type: application/json"  | sed -e 's/[{}]/''/g' | awk -v RS=',' -F: '{print $1 $2}'  | grep -E 'reference|name'
@@ -74,6 +83,8 @@ curl -s -X GET -k http://${DE}/resources/json/delphix/jetstream/branch?dataLayou
 # activate  the bookmark
    curl -s -X POST  -k http://${DE}/resources/json/delphix/jetstream/branch/JS_BRANCH-${BRANCH_REF}/activate \
     -b ~/cookies.txt -H "Content-Type: application/json"
+
+ sleep 180
 ;;
 delete)
   curl -X GET -k http://${DE}/resources/json/delphix/jetstream/container -b ~/cookies.txt -H "Content-Type: application/json"  | sed -e 's/[{}]/''/g' | awk -v RS=',' -F: '{print $1 $2}'  | grep -E 'reference|name'
@@ -93,6 +104,8 @@ delete)
 #delete the bookmark
    curl -s -X DELETE -k http://${DE}/resources/json/delphix/jetstream/branch/JS_BRANCH-${BRANCH_REF} \
     -b ~/cookies.txt -H "Content-Type: application/json" 
+
+   sleep 180
 echo
 ;;
 *)
