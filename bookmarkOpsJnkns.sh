@@ -1,7 +1,15 @@
 #!/bin/bash
 #
-# sample script to  ...........
+# Script to perfrom boomark operations from Jenkins
 #
+#Usage Notes:
+# General Usage: sh bookmarkOpsJnkns.sh "Action to perform" "Container Name" "Bookmark Name" "Branch Name (Only for bookmarke creation"
+# To create bookmark : sh bookmarkOpsJnkns.sh create  SITEmp testbkmk default
+# To activate bookmark : sh bookmarkOpsJnkns.sh activate  SITEmp testbkmk 
+# To delete bookmark : sh bookmarkOpsJnkns.sh delete  SITEmp testbkmk
+# To share bookmark : sh bookmarkOpsJnkns.sh share  SITEmp testbkmk
+# To unshare bookmark : sh bookmarkOpsJnkns.sh unshare  SITEmp testbkmk
+
 . loginCredentials
 
 
@@ -58,10 +66,10 @@ create)
 echo container is  $cntnr
 
 
- brname=`curl -s -X GET -k http://${DE}/resources/json/delphix/jetstream/branch?dataLayout=${cntnr}  -b ~/cookies.txt -H "Content-Type: application/json"  | jq --raw-output '.result[] | select(.name=="'"${3}"'") | .reference '`
+ brname=`curl -s -X GET -k http://${DE}/resources/json/delphix/jetstream/branch?dataLayout=${cntnr}  -b ~/cookies.txt -H "Content-Type: application/json"  | jq --raw-output '.result[] | select(.name=="'"${4}"'") | .reference '`
 echo branch is $brname
 
-  sh createBookmark.sh ${4} ${brname}
+  sh createBookmark.sh ${3} ${brname}
 ;;
 share)
       cntnr=`curl -X GET -k http://${DE}/resources/json/delphix/jetstream/container -b ~/cookies.txt -H "Content-Type: application/json"  | jq --raw-output '.result[] | select(.name=="'"${2}"'") | .reference '`
